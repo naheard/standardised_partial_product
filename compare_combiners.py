@@ -1030,9 +1030,11 @@ if checkstdin and not sys.stdin.isatty():
             make_parameter_vectors(n,nmax,methods)
             if M0>0:
                 null_distns=get_null_distns(n,M=M0,nmax=nmax,methods=[m for m in methods if m not in closed_form_methods],calculate_cdfs=True,seed=0)
-            else:
+            elif M0==0:
                 null_filename="null_distns_"+str(n)+".txt"
                 null_distns=get_null_distns_from_file(null_filename,methods=[m for m in methods if m not in closed_form_methods])
+            else: #print the raw combined statistics
+                null_distns=[]
             if n_old is None:
                 sys.stdout.write("\t".join([m.func_name for m in methods])+"\n")
             n_old=n
