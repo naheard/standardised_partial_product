@@ -44,7 +44,7 @@ def monte_carlo_standardised_product(ps,n=0,nmax=-1,complementary=False):
         raw_stats=np.cumsum(np.log(1-ps))
 
     if not building_null:
-        ranks=[bisect(mcsp_stores[:,j],raw_stats[j])/float(mcsp_stores.shape[0]) for j in xrange(nmax)]
+        ranks=[bisect(mcsp_stores[:,j],raw_stats[j])/float(mcsp_stores.shape[0]) for j in range(nmax)]
         z_argmin,z_min=min(enumerate(ranks), key=operator.itemgetter(1))
     else:
         z_min,z_argmin=-1,0
@@ -292,7 +292,7 @@ def modified_berk_jones(ps,n=0,nmax=-1,min_alpha=0):
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n/2:
-        nmax=n/2
+        nmax=int(n/2)
     nmin=min(np.searchsorted(ps,min_alpha/float(n),side='right'),nmax-1)
     if ps[0]==0:
         return -sys.float_info.max,1
@@ -311,7 +311,7 @@ def modified_berk_jones(ps,n=0,nmax=-1,min_alpha=0):
         z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
     except:
         z_argmin,z_min=0,0
-        
+
     return z_min,z_argmin+1
 
 def standardised_order_statistics(ps,n=0,nmax=-1):
@@ -439,11 +439,11 @@ def partial_product_CDF(y,n,k=1):#cdf for sum of -log of k smallest p-values fro
         cdf=sum(terms)
         if k==14:
             i=1
-            print [(-i/float(k))**j*poisson.sf(j,y) for j in range(k)], k/float(k+i)*(np.exp(-(1+i/float(k))*y)-1), gamma_exp_terms(i,y,k)
+            print([(-i/float(k))**j*poisson.sf(j,y) for j in range(k)], k/float(k+i)*(np.exp(-(1+i/float(k))*y)-1), gamma_exp_terms(i,y,k))
             a=k/float(k+i)*(np.exp(-(k+i)*y/float(k))-1)
             for j in range(k):
                 a+=(-i/float(k))**j*poisson.sf(j,y)
-            print a
+            print(a)
     return cdf
 
 def partial_complementary_product_CDF(y,n,k=1):#cdf for sum of -log of k largest p-values from n
@@ -574,7 +574,7 @@ def get_null_distns(n,nmax=0,M=10000,methods=[standardised_product],calculate_cd
     if seed is not None:
         np.random.seed(seed)
     if not calculate_cdfs:
-        outputstream.write("\t".join([m.func_name for m in methods])+"\n")
+        outputstream.write("\t".join([m.__name__ for m in methods])+"\n")
     if monte_carlo_standardised_product in methods:
         mcsp_filename="mcsp_"+str(n)+"_.npy"
         try:
@@ -584,7 +584,7 @@ def get_null_distns(n,nmax=0,M=10000,methods=[standardised_product],calculate_cd
         except:
             mcsp_stores=np.empty([M,nmax])
             building_null=True
-    for i in xrange(M):
+    for i in range(M):
         ps=draw_ordered_uniforms(n,nmax)
         for m in methods:
             score_m_i,index_m_i=m(ps,n,nmax)
@@ -620,25 +620,25 @@ def create_mcsp_ranks():
     from scipy.stats import rankdata
     M=mcsp_stores.shape[0]
     mcsp_ranks,mcsp_min_ranks=np.empty([M,nmax]),np.empty(M)
-    for j in xrange(nmax):
+    for j in range(nmax):
         mcsp_ranks[:,j]=rankdata(mcsp_stores[:,j])
         mcsp_stores[:,j]=sorted(mcsp_stores[:,j])
-    for i in xrange(M):
+    for i in range(M):
         mcsp_min_ranks[i]=min(mcsp_ranks[i,])/float(M)
     return mcsp_min_ranks
 
 def make_3d_plot_points(num_points=20,methods=[standardised_product],sep=" ",maxval=1):
-    sys.stdout.write(sep.join(["p_i","p_j"]+[m.func_name for m in methods])+"\n")
-    for i in xrange(num_points):
+    sys.stdout.write(sep.join(["p_i","p_j"]+[m.__name__ for m in methods])+"\n")
+    for i in range(num_points):
         pi=float(i)/(num_points-1)*maxval
-        for j in xrange(num_points):
+        for j in range(num_points):
             pj=float(j)/(num_points-1)*maxval
             sys.stdout.write(sep.join(map(str,[pj,pi]+[null_distns[method](method(sorted([pi,pj]))[0]) if method in null_distns else method(sorted([pi,pj]))[0] for method in methods]))+"\n")
         sys.stdout.write("\n")
 
 def make_2d_plot_points(num_points=20,ps=[],methods=[standardised_product],sep=" ",maxval=1):
-    sys.stdout.write(sep.join(["p_i"]+[m.func_name for m in methods])+"\n")
-    for i in xrange(num_points):
+    sys.stdout.write(sep.join(["p_i"]+[m.__name__ for m in methods])+"\n")
+    for i in range(num_points):
         pi=float(i)/(num_points-1)*maxval
         psi=np.sort([pi]+list(ps))
         sys.stdout.write(sep.join(map(str,[pi]+[null_distns[method](method(sorted(psi))[0]) if method in null_distns else method(sorted(psi))[0] for method in methods]))+"\n")
@@ -665,7 +665,7 @@ def get_null_distns_from_file(filename,methods=[standardised_product]):
         first_line = f.readline().split()
     except:
         return None
-    method_columns={m: (first_line.index(m.func_name) if m.func_name in first_line else -1) for m in methods}# if m is not monte_carlo_standardised_product}
+    method_columns={m: (first_line.index(m.__name__) if m.__name__ in first_line else -1) for m in methods}# if m is not monte_carlo_standardised_product}
     methods_present=[m for m in methods if method_columns[m]!=-1]
     if monte_carlo_standardised_product in methods_present:
         scores[monte_carlo_standardised_product]=[]
@@ -832,8 +832,8 @@ def get_alternative_pvalue_distributions(n,nmax,epsilon,k,mu,random_k=True,M=100
     if seed is not None:
         np.random.seed(seed)
     outputstream=sys.stdout if alt_distn_filename=="" else open(alt_distn_filename,"w",buffering=1)
-    outputstream.write("\t".join([m.func_name for m in methods])+"\n")
-    for i in xrange(M):
+    outputstream.write("\t".join([m.__name__ for m in methods])+"\n")
+    for i in range(M):
         ps=h1_draw(n,k if not random_k else np.random.binomial(n,epsilon),mu)
         pvals_i=[]
         for j in range(num_methods):
@@ -866,14 +866,14 @@ def get_alternative_pvalue_distributions(n,nmax,epsilon,k,mu,random_k=True,M=100
                 auc_outputstream.write('AUC\n')
             for m in methods:
                 method_pvals[m].sort()
-                auc_outputstream.write(m.func_name+"\t"+str(auc(np.array(method_pvals[m]+[1]),np.arange(0,M+1)/float(M)))+"\n")
+                auc_outputstream.write(m.__name__+"\t"+str(auc(np.array(method_pvals[m]+[1]),np.arange(0,M+1)/float(M)))+"\n")
             if auc_filename!="":
                 auc_outputstream.close()
         except:
             None
         if append_zeros_and_ones:
             outputstream.write("\t".join(map(str,[0]*(len(methods))))+"\n")
-        for i in xrange(M):
+        for i in range(M):
 #            outputstream.write(str((i+1.0)/M)+"\t"+"\t".join([str(method_pvals[m][i]) for m in methods])+"\n")
             outputstream.write("\t".join([str(method_pvals[m][i]) for m in methods])+"\n")
 
@@ -883,7 +883,7 @@ def get_alternative_pvalue_distributions(n,nmax,epsilon,k,mu,random_k=True,M=100
         outputstream.flush()
     if calculate_index_pmfs:
         f=open(index_pmf_filename,"w")
-        f.write("k\t"+"\t".join([m.func_name for m in methods])+"\n")
+        f.write("k\t"+"\t".join([m.__name__ for m in methods])+"\n")
         for i in range(n):
             f.write(str(i+1)+"\t"+"\t".join([str(method_index_pmfs[m][i+1]/float(M)) for m in methods])+"\n")
         f.close()
@@ -942,7 +942,7 @@ def plot_cdfs(filename,methods=None,grid=None,outputfile="",indices=None):
         with open(filename,'r') as f:
             method_names=f.readline().split()
     else:
-        method_names=[m.func_name for m in methods]
+        method_names=[m.__name__ for m in methods]
     if indices is not None:
         x=x[:,indices]
         method_names=np.array(method_names)[indices]
@@ -1036,7 +1036,7 @@ if checkstdin and not sys.stdin.isatty():
             else: #print the raw combined statistics
                 null_distns=[]
             if n_old is None:
-                sys.stdout.write("\t".join([m.func_name for m in methods])+"\n")
+                sys.stdout.write("\t".join([m.__name__ for m in methods])+"\n")
             n_old=n
         get_p_values(x,methods,nmax,samples=1000)
         counter+=1
@@ -1053,7 +1053,7 @@ true_k=k
 random_k=not True
 
 make_parameter_vectors(n,nmax,methods)
-#print mu_comp_prod,sigma_comp_prod**2
+#print(mu_comp_prod,sigma_comp_prod**2)
 
 if M0>0:
     null_distns=get_null_distns(n,M=M0,nmax=nmax,methods=[m for m in methods if m not in closed_form_methods],calculate_cdfs=(M1>0 or make_a_plot),seed=seed,output_filename=null_filename,write_mcsp_to_file=True)
