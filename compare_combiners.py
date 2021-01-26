@@ -743,6 +743,8 @@ def h1_draw(n,k,mu):
 #        null_p_values=norm.sf(norm.isf(draw_ordered_uniforms(n-k),loc=-mu*.1,scale=1))
 #        p1s=norm.sf(norm.isf(draw_ordered_uniforms(1).repeat(k),loc=mu))
 #        p1s=sorted(norm.cdf(np.random.normal(loc=-mu,size=k)))
+    elif alternative_distn=='normal_hc':
+        p1s=norm.sf(norm.isf(draw_ordered_uniforms(k),loc=mu,scale=.05))#use smaller scale to favour HC
     elif alternative_distn=='cor_normal':
         rh=.995
         w=(rh-np.sqrt(rh*(1-rh)))/(2*rh-1.0)
