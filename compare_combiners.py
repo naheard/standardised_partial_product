@@ -1030,7 +1030,9 @@ except:
 if methods is not None:
     methods=[globals()[m] for m in methods]
 else:
-    methods=monte_carlo_methods+closed_form_methods#+doubly_monte_carlo_methods #,standardised_product_subset,asymptotic_standardised_product
+    methods=monte_carlo_methods+closed_form_methods#,standardised_product_subset,asymptotic_standardised_product
+    if n<=10000:
+        methods+=doubly_monte_carlo_methods
 #methods=[partial_sum]
 #methods=[monte_carlo_standardised_product]
 
