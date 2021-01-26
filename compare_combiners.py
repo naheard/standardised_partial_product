@@ -10,29 +10,29 @@ from math import factorial
 from heapq import merge
 from collections import Counter
 from bisect import bisect
-global closed_form_methods,doubly_monte_carlo_methods,null_distns,mu_prod,sigma_prod,mu_sum,sigma_sum,mu_comp_prod,sigma_comp_prod,mu_subset_prod,sigma_subset_prod,mu_os,sigma_os,alternative_distn,true_k,mu_stouffer,sd_stouffer,mu_asymp_prod,sigma_asymp_prod,mcsp_stores,raw_stats,building_null
+import pandas as pd
 
 null_distributions_url="http://null-distributions.ma.ic.ac.uk/"
 
 def draw_ordered_uniforms(n,k=0):
     if n==0:
-        return np.empty(shape=0)
+        return(np.empty(shape=0))
     if k==0 or k>n:
         k=n
 #    x= sorted(np.random.uniform(size=k))
 #    if n>k:
 #        x=x*np.random.beta(nmax+1,n-k)
-#    return x
+#    return(x)
     x=np.random.exponential(size=k+1)
     scaler=sum(x)
     if n>k:
         scaler+=np.random.gamma(shape=n-k)
-    return (np.cumsum(x[:k]))/scaler
+    return(np.cumsum(x[:k])/scaler)
 
 def monte_carlo_standardised_product(ps,n=0,nmax=-1,complementary=False):
     global raw_stats,building_null
     if not complementary and ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n:
@@ -48,11 +48,11 @@ def monte_carlo_standardised_product(ps,n=0,nmax=-1,complementary=False):
         z_argmin,z_min=min(enumerate(ranks), key=operator.itemgetter(1))
     else:
         z_min,z_argmin=-1,0
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def partial_product(ps,n=0,nmax=-1,complementary=False):
     if not comlementary and ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n:
@@ -65,11 +65,11 @@ def partial_product(ps,n=0,nmax=-1,complementary=False):
         lps=np.cumsum(np.log(1-ps))
         z=[partial_complementary_product_CDF(-lps[k-1],n,k) for k in range(1,nmax+1)]
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def partial_sum(ps,n=0,nmax=-1):
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n:
@@ -77,13 +77,12 @@ def partial_sum(ps,n=0,nmax=-1):
     ps=ps[0:nmax]
     sps=np.cumsum(ps)
     z=[partial_sum_CDF(sps[k-1],n,k) for k in range(1,nmax+1)]
-#    return z[4],5
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def normalised_product(ps,n=0,nmax=-1):
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n:
@@ -93,11 +92,11 @@ def normalised_product(ps,n=0,nmax=-1):
     normalisers=np.log(one_above)*(np.arange(nmax)+1)
     z=chi2.sf(-2*(np.cumsum(np.log(ps))-normalisers),2*(np.arange(nmax)+1))
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def normalised_complementary_product(ps,n=0,nmax=-1):
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n:
@@ -107,11 +106,11 @@ def normalised_complementary_product(ps,n=0,nmax=-1):
     normalisers=np.log(one_above)*(np.arange(nmax)+1)
     z=[chi2.cdf(-2*(np.sum(np.log(one_above[i]-ps[0:(i+1)]))-normalisers[i]),2*(i+1)) for i in np.arange(nmax)]
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_product(ps,n=0,nmax=-1,min_alpha=0,first=True):
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n:
@@ -125,14 +124,14 @@ def standardised_product(ps,n=0,nmax=-1,min_alpha=0,first=True):
         mean,sd=-mu_comp_prod[:nmax],sigma_comp_prod[:nmax]
     z=(sps-mean)/sd
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_product2(ps,n=0,nmax=-1):
-    return standardised_product(ps,n,nmax,1)
+    return(standardised_product(ps,n,nmax,1))
 
 def asymptotic_standardised_product(ps,n=0,nmax=-1,min_alpha=0):
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>=n:
@@ -142,7 +141,7 @@ def asymptotic_standardised_product(ps,n=0,nmax=-1,min_alpha=0):
     mean,sd=mu_asymp_prod[nmin:nmax],sigma_asymp_prod[nmin:nmax]
     z=(sps-mean)/sd
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_complementary_product(ps,n=0,nmax=-1):
     if n==0:
@@ -155,11 +154,11 @@ def standardised_complementary_product(ps,n=0,nmax=-1):
         except:
             nmax=np.where(ps==1)[0][0]
         if nmax==0:
-            return sys.float_info.max,1
+            return(sys.float_info.max,1)
     ps=np.array(ps[:nmax])
     z=(-np.cumsum(np.log(1-ps))-mu_comp_prod[:nmax])/sigma_comp_prod[:nmax]
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_product_subset_k(ps,n=0,nmax=-1,k=0):
     if n==0:
@@ -175,7 +174,7 @@ def standardised_product_subset_k(ps,n=0,nmax=-1,k=0):
     except:
         z=((cumps[k:nmax+1]-cumps[0:nmax-k+1])-mu_subset_prod[0:(nmax-k+1)])/sigma_subset_prod[0:(nmax-k+1)]
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_product_subset(ps,n=0,nmax=-1):
     if n==0:
@@ -191,11 +190,11 @@ def standardised_product_subset(ps,n=0,nmax=-1):
         if z_min_k<z_min:
             z_min=z_min_k
             z_argmin=np.array([k,z_argmin_k])[0]
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_logit(ps,n=0,nmax=-1):
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if n==0:
         n=len(ps)
     if nmax<0 or nmax>n:
@@ -206,11 +205,11 @@ def standardised_logit(ps,n=0,nmax=-1):
         except:
             nmax=np.where(ps==1)[0][0]
         if nmax==0:
-            return sys.float_info.max,1
+            return(sys.float_info.max,1)
     ps=np.array(ps[:nmax])
     z=(np.cumsum(np.log(ps)-np.log(1-ps))-mu_logit[:nmax])/sigma_logit[:nmax]
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_sum(ps,n=0,nmax=-1):
     if n==0:
@@ -220,7 +219,7 @@ def standardised_sum(ps,n=0,nmax=-1):
     ps=ps[0:min(n,nmax)]
     z=(np.cumsum(ps)-mu_sum)/sigma_sum
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def monte_carlo_logit_expected_square(n,nmax=0,M=100000):
     if nmax<0 or nmax>n:
@@ -230,7 +229,7 @@ def monte_carlo_logit_expected_square(n,nmax=0,M=100000):
         ps=draw_ordered_uniforms(n,nmax)
         x=np.cumsum(np.log(ps)-np.log(1-ps))
         ssq+=x**2
-    return ssq/M
+    return(ssq/M)
 
 def higher_criticism(ps,n=0,nmax=-1,min_alpha=0):
     if n==0:
@@ -239,22 +238,22 @@ def higher_criticism(ps,n=0,nmax=-1,min_alpha=0):
         nmax=n
     nmin=min(np.searchsorted(ps,min_alpha/float(n),side='right'),nmax-1)
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if ps[nmax-1]==1:
         try:
             nmax=ps.index(1)
         except:
             nmax=np.where(ps==1)[0][0]
         if nmax<=nmin:
-            return 1,1
+            return(1,1)
     ps=np.array(ps[nmin:nmax])
     sqrt_n=np.sqrt(n)
     z=(sqrt_n*ps-np.arange(nmin+1,nmax+1)/sqrt_n)/np.sqrt(ps*(1-ps))
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def higher_criticism2(ps,n=0,nmax=-1):
-    return higher_criticism(ps,n,nmax,1)
+    return(higher_criticism(ps,n,nmax,1))
 
 def berk_jones(ps,n=0,nmax=-1,min_alpha=0):
     if n==0:
@@ -263,14 +262,14 @@ def berk_jones(ps,n=0,nmax=-1,min_alpha=0):
         nmax=n
     nmin=min(np.searchsorted(ps,min_alpha/float(n),side='right'),nmax-1)
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if ps[nmax-1]==1:
         try:
             nmax=ps.index(1)
         except:
             nmax=np.where(ps==1)[0][0]
         if nmax<=nmin:
-            return 1,1
+            return(1,1)
     ps=np.array(ps[nmin:nmax])
     sqrt_n=np.sqrt(n)
     k_=np.arange(nmin+1,nmax+1)
@@ -278,15 +277,15 @@ def berk_jones(ps,n=0,nmax=-1,min_alpha=0):
 #        z=-np.sqrt(-2*k_*np.log(n*ps/k_)-(n-k_)*np.log(n*(1-ps)/(n-k_)))
     z=-np.sqrt(np.maximum(-2*k_*np.log(n*ps/k_)+_xlogy(n-k_,(n-k_)/(n*(1-ps))),0))
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def _xlogy_(x,y):
     if x==0:
-        return 0
-    return x*np.log(y)
+        return(0)
+    return(x*np.log(y))
 
 def _xlogy(xx,yy):
-    return [_xlogy_(x,y) for x,y in zip(xx,yy)]
+    return([_xlogy_(x,y) for x,y in zip(xx,yy)])
 
 def modified_berk_jones(ps,n=0,nmax=-1,min_alpha=0):
     if n==0:
@@ -295,14 +294,14 @@ def modified_berk_jones(ps,n=0,nmax=-1,min_alpha=0):
         nmax=int(n/2)
     nmin=min(np.searchsorted(ps,min_alpha/float(n),side='right'),nmax-1)
     if ps[0]==0:
-        return -sys.float_info.max,1
+        return(-sys.float_info.max,1)
     if ps[nmax-1]==1:
         try:
             nmax=ps.index(1)
         except:
             nmax=np.where(ps==1)[0][0]
         if nmax<=nmin:
-            return 1,1
+            return(1,1)
     k_=np.array([i for i in np.arange(nmin+1,nmax+1) if n*ps[i-1]<i])
     ps=np.array([ps[i-1] for i in k_])
     sqrt_n=np.sqrt(n)
@@ -312,7 +311,7 @@ def modified_berk_jones(ps,n=0,nmax=-1,min_alpha=0):
     except:
         z_argmin,z_min=0,0
 
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_order_statistics(ps,n=0,nmax=-1):
     if n==0:
@@ -322,22 +321,22 @@ def standardised_order_statistics(ps,n=0,nmax=-1):
     ps=ps[0:min(n,nmax)]
     z=(ps-mu_os)/sigma_os
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def standardised_stouffer(ps,n=0,nmax=-1):
     if n==0:
         n=len(ps)
     if ps[0]==0:
-        return 0,n
+        return(0,n)
     if ps[-1]==1:
-        return 1,n
+        return(1,n)
     if nmax<=0 or nmax>n:
         nmax=n
     if nmax<n:
         ps=np.array(ps[:nmax])
     z=(np.cumsum(norm.ppf(ps))-mu_stouffer)/sd_stouffer
     z_argmin,z_min=min(enumerate(z), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def simes(ps,n=0,nmax=-1):
     if n==0:
@@ -352,64 +351,64 @@ def simes(ps,n=0,nmax=-1):
             z_min=betainc(1,n+1,z_min)
         else:
             z_min=betainc(nmax,n+1-nmax,z_min)+n/float(nmax)*z_min*(1-betainc(nmax-1,n+1-nmax,z_min))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def fisher(ps,n=0,nmax=""):
     if n==0:
         n=len(ps)
     if ps[0]==0:
-        return 0,n
-    return chi2.sf(-2*sum(np.log(ps)),2*n),n
+        return(0,n)
+    return(chi2.sf(-2*sum(np.log(ps)),2*n),n)
 
 def pearson(ps,n=0,nmax=""):
     if n==0:
         n=len(ps)
     if ps[-1]==1:
-        return 1,n
-    return chi2.cdf(-2*sum(np.log([1-p for p in ps])),2*n),n
+        return(1,n)
+    return(chi2.cdf(-2*sum(np.log([1-p for p in ps])),2*n),n)
 
 def sum_method(ps,n=0,nmax=""):
     if n==0:
         n=len(ps)
-    return norm.cdf(np.sqrt(12.0/n)*(sum(ps)-.5*n)),n
+    return(norm.cdf(np.sqrt(12.0/n)*(sum(ps)-.5*n)),n)
 
 def beta(ps,n=0,nmax=""):
-    return 1.0-(1.0-ps[0])**n,1
+    return(1.0-(1.0-ps[0])**n,1)
 
 def stouffer(ps,n=0,nmax=""):
     if n==0:
         n=len(ps)
     if ps[0]==0:
-        return 0,n
+        return(0,n)
     if ps[-1]==1:
-        return 1,n
-    return norm.cdf(sum(norm.ppf(ps))/np.sqrt(n)),n
+        return(1,n)
+    return(norm.cdf(sum(norm.ppf(ps))/np.sqrt(n)),n)
 
 def logistic(ps,n=0,nmax=""):
     if n==0:
         n=len(ps)
     if ps[0]==0:
-        return 0,n
+        return(0,n)
     if ps[-1]==1:
-        return 1,n
+        return(1,n)
     return norm.cdf(sum(np.log(ps)-np.log(1.0-ps))/(np.pi*np.sqrt(n/3.0))),n
 
 def inverse_cauchy(ps,n=0,nmax=""):#Yaowu Liu, Harvard Sch of Pub Health
     if n==0:
         n=len(ps)
     if ps[0]==0:
-        return 0,n
+        return(0,n)
     if ps[-1]==1:
-        return 1,n
-    return cauchy.sf(sum(cauchy.isf(ps))/float(n)),n
+        return(1,n)
+    return(cauchy.sf(sum(cauchy.isf(ps))/float(n)),n)
 
 def truncated_product(ps,n=0,nmax=-1,tau=0.05):
     if n==0:
         n=len(ps)
     if ps[0]==0:
-        return 0,n
+        return(0,n)
     if ps[0]>tau:
-        return 1,n
+        return(1,n)
     if nmax<=0 or nmax>n:
         nmax=n
     if nmax<n:
@@ -418,15 +417,15 @@ def truncated_product(ps,n=0,nmax=-1,tau=0.05):
     z=-2*sum(np.log(ps[:z_argmin]))
     ltau=-2*np.log(tau)
     Fz=stats.binom.pmf(0,nmax,tau)+sum([tmp_cdf_contribution(z,tau,ltau,j+1,nmax) for j in range(nmax)])
-    return 1-Fz,z_argmin
+    return(1-Fz,z_argmin)
 
 def tmp_cdf_contribution(z,tau,ltau,j,nmax):
-    return 0 if z<ltau*j else stats.binom.pmf(j,nmax,tau)*chi2.cdf(z-ltau*j,2*j)
+    return(0 if z<ltau*j else stats.binom.pmf(j,nmax,tau)*chi2.cdf(z-ltau*j,2*j))
 
 def ensemble(pvals):
     return sum(pvals)
     z_argmin,z_min=min(enumerate(pvals), key=operator.itemgetter(1))
-    return z_min,z_argmin+1
+    return(z_min,z_argmin+1)
 
 def partial_product_CDF(y,n,k=1):#cdf for sum of -log of k smallest p-values from n
     if k==1:
@@ -444,7 +443,7 @@ def partial_product_CDF(y,n,k=1):#cdf for sum of -log of k smallest p-values fro
             for j in range(k):
                 a+=(-i/float(k))**j*poisson.sf(j,y)
             print(a)
-    return cdf
+    return(cdf)
 
 def partial_complementary_product_CDF(y,n,k=1):#cdf for sum of -log of k largest p-values from n
     if k==1:
@@ -453,18 +452,18 @@ def partial_complementary_product_CDF(y,n,k=1):#cdf for sum of -log of k largest
         cdf=chi2.cdf(2*y,2*n)
     else:
         cdf=factorial(n)/float(factorial(n-k))*sum([(i/float((n-k)))**(k-1)*(-1)**(k-i)/float(factorial(i-1)*factorial(k-i)*(n-k+i))*(1-np.exp(-(n-k+i)*y/float(i))) for i in range(1,k+1)])
-    return cdf
+    return(cdf)
 
 def partial_sum_CDF(y,n,k=1):#cdf for sum of of k smallest p-values from n
     if y>=n:
-        return 1
+        return(1)
     if k==1:
         cdf=1-(1-y)**n
     elif k==n:
         cdf=sum([(-1)**k*(y-k)**n/float(factorial(n-k)*factorial(k)) for k in range(0,int(y)+1)])
     else:
         cdf=factorial(n)/factorial(n-k-1)*sum([(-1)**i/float(factorial(i)*factorial(k-i))*sum([(y-i)**(k-j)*i**j*(1 if y>=i else (1-(1-y/float(i))**(j+n-k)))/float(factorial(j)*factorial(k-j)*(j+n-k)) for j in range(0,k+1)]) for i in range(0,k+1)])
-    return cdf
+    return(cdf)
 
 def partial_product_SF(y,n,k=1):#cdf for sum of -log of k smallest p-values from n
     if k==1:
@@ -482,16 +481,16 @@ def partial_product_SF(y,n,k=1):#cdf for sum of -log of k smallest p-values from
                 sf+=term_j*(l_sum-np.exp(-(i+1)*y)*(-1)**(j+i)/float((i+1)**(j+1)))/(factorial(i)*factorial(n-k-1-i))
 ###        sf=sum([k**j*sum([(sum([(-1)**(l+i)*y**(j-l)/float(factorial(j-l)*(i+1)**(l+1)) for l in range(j+1)])-np.exp(-(i+1)*y)*(-1)**(j+i)/float((i+1)**(j+1)))/(factorial(i)*factorial(n-k-1-i)) for i in range(n-k)]) for j in range(k)])
         sf+=betainc(k+1,n-k,np.exp(-y))
-    return sf
+    return(sf)
 
 def gamma_exp_terms(i,y,k):
-  return sum([(-i/float(k))**j*poisson.sf(j,y) for j in range(k)]) + k/float(k+i)*(np.exp(-(k+i)*y/float(k))-1)
+  return(sum([(-i/float(k))**j*poisson.sf(j,y) for j in range(k)]) + k/float(k+i)*(np.exp(-(k+i)*y/float(k))-1))
 
 def make_parameter_vectors(n,nmax,methods=[standardised_product]):
     global mu_prod,sigma_prod,mu_sum,sigma_sum,mu_comp_prod,sigma_comp_prod,mu_subset_prod,sigma_subset_prod,mu_logit,sigma_logit,mu_os,sigma_os,true_k,mu_stouffer,sd_stouffer,mu_asymp_prod,sigma_asymp_prod
     k=np.arange(1,nmax+1)
     if standardised_product in methods or standardised_complementary_product in methods:
-        mu_prod=-k*(1+polygamma(0,n+1)-polygamma(0,k+1))
+        mu_prod=-k*(1+polygamma(0,n+1)-polygamma(0,k+1))#-k*(1+np.log(n+1)-np.log(k+1))
         sigma_prod=k*np.sqrt(1.0/k+polygamma(1,k+1)-polygamma(1,n+1))
 #        mu_comp_prod=n-(n-k)*(1-polygamma(0,n-k+1)+polygamma(0,n+1))
         mu_comp_prod=k-(n-k)*(polygamma(0,n+1)-polygamma(0,n-k+1))
@@ -556,10 +555,10 @@ def get_subset_moments(n,nmax):
             mu_subset_prod[l,k],sigma_subset_prod[l,k]=get_subset_moments_lk(l,k,n,nmax)
 
 def get_subset_moments_lk(l,k,n,nmax):#for sum_{i=l+1}^{l+k} log p_(i)
-    mean=mu_prod[l+k-1]- (0 if l is 0 else mu_prod[l-1])
+    mean=mu_prod[l+k-1]- (0 if l==0 else mu_prod[l-1])
 #    sd=np.sqrt(k-l**2*(polygamma(1,l+k+1)-polygamma(1,l+1))-2*l*(polygamma(0,l+k+1)-polygamma(0,l+1))+k**2*(polygamma(1,l+k+1)-polygamma(1,n+1)))
     sd=np.sqrt(k-(l**2-k**2)*polygamma(1,l+k+1)+l**2*polygamma(1,l+1)-k**2*polygamma(1,n+1)-2*l*(polygamma(0,l+k+1)-polygamma(0,l+1)))
-    return mean,sd
+    return(mean,sd)
 
 def get_null_distns(n,nmax=0,M=10000,methods=[standardised_product],calculate_cdfs=True,seed=None,output_filename=None,write_mcsp_to_file=False):
     global mcsp_stores,raw_stats,building_null
@@ -610,10 +609,10 @@ def get_null_distns(n,nmax=0,M=10000,methods=[standardised_product],calculate_cd
             scores[monte_carlo_standardised_product]=mcsp_min_ranks[:]
 
     if not calculate_cdfs:
-        return 0
+        return(0)
     for m in methods:
         scores[m]=ECDF(scores[m])
-    return scores
+    return(scores)
 
 def create_mcsp_ranks():
     global mcsp_stores
@@ -625,7 +624,7 @@ def create_mcsp_ranks():
         mcsp_stores[:,j]=sorted(mcsp_stores[:,j])
     for i in range(M):
         mcsp_min_ranks[i]=min(mcsp_ranks[i,])/float(M)
-    return mcsp_min_ranks
+    return(mcsp_min_ranks)
 
 def make_3d_plot_points(num_points=20,methods=[standardised_product],sep=" ",maxval=1):
     sys.stdout.write(sep.join(["p_i","p_j"]+[m.__name__ for m in methods])+"\n")
@@ -657,34 +656,44 @@ def get_null_distns_from_file(filename,methods=[standardised_product]):
             building_null=False
 #            if len(methods)==1:
 #                scores[monte_carlo_standardised_product]=ECDF(scores[monte_carlo_standardised_product])
-#                return scores
+#                return(scores)
         except:
-            return None
+            return(None)
     f=get_file(filename)
-    try:
-        first_line = f.readline().split()
-    except:
-        return None
+    df=pd.read_csv(f, sep='\t')
+    first_line=list(df.columns)
+#    f=get_file(filename)
+#    try:
+#        first_line = f.readline()
+#        try:
+#            first_line = first_line.decode('ascii').split()
+#        except:
+#            first_line = first_line.split()
+#    except:
+#        return(None)
     method_columns={m: (first_line.index(m.__name__) if m.__name__ in first_line else -1) for m in methods}# if m is not monte_carlo_standardised_product}
     methods_present=[m for m in methods if method_columns[m]!=-1]
     if monte_carlo_standardised_product in methods_present:
         scores[monte_carlo_standardised_product]=[]
-    for line in f:
-        try:
-            s=map(float,line.strip().split())
-            for m in methods_present:
-                scores[m]+=[s[method_columns[m]]]
-        except:
-            None
-    f.close()
+#    for line in f:
+#        try:
+#            s=list(map(float,line.strip().split()))
+#            for m in methods_present:
+#                scores[m]+=[s[method_columns[m]]]
+#        except:
+#            None
+#    f.close()
 
     for m in methods:
-        scores[m]=ECDF(scores[m])
+        try:
+            scores[m]=ECDF(df[m.__name__])
+        except:
+            scores[m]=ECDF(scores[m])
 
     include_ensemble=False
     if include_ensemble:
         scores[ensemble]=get_ensemble_distn(filename,scores,methods)
-    return scores
+    return(scores)
 
 def get_ensemble_distn(filename,scores,methods):
     f=get_file(filename)
@@ -696,25 +705,26 @@ def get_ensemble_distn(filename,scores,methods):
             pvals_i+=[scores[methods[i]](s[i])]
         ensemble_scores+=[ensemble(pvals_i)]
     f.close()
-    return ECDF(ensemble_scores)
+    return(ECDF(ensemble_scores))
 
 def get_file(filename):
     try:
-        return open(filename, "r")
+        return(open(filename, "r"))
     except:
         try:
-            import urllib2
+            import urllib.request
             if filename.startswith("null_distns_"):
                 filename=filename.split("_",2)[-1]
-            url_file=urllib2.urlopen(null_distributions_url+filename,"r")
-            return url_file
+            url_file=urllib.request.urlopen(null_distributions_url+filename)
+            return(url_file)
         except:
 #            sys.stderr.write("Null distribution file " + filename + " not found.\n")
-            return None
+            return(None)
 
 def get_k_epsilon_mu(n,beta,dr):
     epsilon=n**(-beta)
     k=int(n*epsilon)
+    r=0
     if dr>0:
         if beta<.5:
             r=dr
@@ -723,7 +733,7 @@ def get_k_epsilon_mu(n,beta,dr):
         else:
             r=dr+(1-np.sqrt(1-beta))**2
     mu=np.sqrt(2*r*np.log(n))
-    return k,epsilon,mu
+    return(k,epsilon,mu)
 
 def h1_draw(n,k,mu):
     null_p_values=draw_ordered_uniforms(n-k)
@@ -814,8 +824,8 @@ def h1_draw(n,k,mu):
     else:
         sys.stderr.write("unrecognised alternative distribution\n")
         exit(1)
-    return np.array(list(merge(p1s,null_p_values)))
-#    return sorted(np.concatenate((p1s,np.random.uniform(size=n-k))))
+    return(np.array(list(merge(p1s,null_p_values))))
+#    return(sorted(np.concatenate((p1s,np.random.uniform(size=n-k)))))
 
 def get_alternative_pvalue_distributions(n,nmax,epsilon,k,mu,random_k=True,M=1000,methods=[standardised_product],sort_output=False,alt_distn_filename="",index_pmf_filename="",auc_filename="",seed=None,append_zeros_and_ones=True):
     if nmax>n or nmax==0:
@@ -879,7 +889,7 @@ def get_alternative_pvalue_distributions(n,nmax,epsilon,k,mu,random_k=True,M=100
 
         if append_zeros_and_ones:
             outputstream.write("\t".join(["1"]*(len(methods))))
-    if alt_distn_filename is not "":
+    if alt_distn_filename != "":
         outputstream.flush()
     if calculate_index_pmfs:
         f=open(index_pmf_filename,"w")
@@ -896,7 +906,7 @@ def random_p_value(x):
             y[i]=x[i]
         else:
             y[i]=np.random.uniform(low=x[i][0],high=x[i][1])
-    return y
+    return(y)
 
 def get_p_values(x,methods,nmax=0,samples=10000,alpha=0.5):
     num_methods=len(methods)
@@ -927,13 +937,13 @@ def calculate_p_values(x,methods,n,nmax):
         else:
             pvals[j]=stat
 
-    return pvals
+    return(pvals)
 
 def get_limits(s,scale=1):
     d=sorted([float(si)/scale for si in s.split(":")])
     if len(d)==1:
-        return d[0]
-    return [2*d[0]-d[1],d[1]]
+        return(d[0])
+    return([2*d[0]-d[1],d[1]])
 
 def plot_cdfs(filename,methods=None,grid=None,outputfile="",indices=None):
     import matplotlib.pyplot as plt
@@ -968,7 +978,7 @@ def get_command_line_arguments():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-s","--seed",type=int,dest="seed", metavar="INT",default=0)
-    parser.add_argument("-n","--number of p-values",type=int,dest="n", metavar="INT",default=10000)
+    parser.add_argument("-n","--number of p-values",type=int,dest="n", metavar="INT",default=2)
     parser.add_argument("-n0","--number of H0 Monte Carlo p-values",type=int,dest="n0", metavar="INT",default=1000000)
     parser.add_argument("-n1","--number of H1 Monte Carlo p-values",type=int,dest="n1", metavar="INT",default=10000)
     parser.add_argument("-h1","--alternative",type=str,dest="alternative_distn", metavar="STR",default="normal")
@@ -983,7 +993,7 @@ def get_command_line_arguments():
     parser.add_argument('--noplot', dest='cdfplot', action='store_false',default=True)
     parser.add_argument('--noones', dest='append_zeros_and_ones', action='store_false',default=True)
 
-    return parser.parse_args()
+    return(parser.parse_args())
 
 closed_form_methods=[simes,fisher,pearson,sum_method,beta,stouffer,logistic,inverse_cauchy,truncated_product]
 monte_carlo_methods=[standardised_product,standardised_complementary_product,standardised_sum,higher_criticism,standardised_product2,higher_criticism2,berk_jones,modified_berk_jones]#,standardised_stouffer]
@@ -993,6 +1003,27 @@ alternative_distns=['normal','exp','power','comp_power','pw_uniform','point_mass
 
 args=get_command_line_arguments()
 seed,n,M0,M1,alternative_distn,beta,dr,alpha_0,null_filename,checkstdin,alt_distn_filename,methods,grid=args.seed,args.n,args.n0,args.n1,args.alternative_distn,args.beta,args.dr,args.alpha_0,args.null_filename,args.checkstdin,args.alt_filename,args.methods,args.grid
+
+try:
+    import rpy2.robjects as robjects
+    from rpy2.robjects.packages import importr
+    awfisher = importr("AWFisher")
+
+    def aw_fisher(ps,n=0,nmax=-1):
+        if ps[0]==0:
+            return(-sys.float_info.max,1)
+        if n==0:
+            n=len(ps)
+        if nmax<0 or nmax>n:
+            nmax=n
+        ps=ps[0:nmax]
+        aw=awfisher.AWFisher_pvalue(robjects.FloatVector(ps))
+        return(float(aw[0][-1]),int(sum(list(aw[1]))))
+
+    if n<=100:
+        closed_form_methods+=[aw_fisher]
+except:
+    None
 
 if methods is not None:
     methods=[globals()[m] for m in methods]
@@ -1067,7 +1098,7 @@ if M1>0:
 #    methods=closed_form_methods
     sys.stderr.write("k="+str(k)+", mu="+str(mu)+"\n")
     get_alternative_pvalue_distributions(n,nmax,epsilon,k,mu,random_k,M1,methods,M0>=0,alt_distn_filename,alt_index_pmf_filename,auc_filename=auc_filename,seed=seed,append_zeros_and_ones=args.append_zeros_and_ones)
-    if args.cdfplot and alt_distn_filename is not "":
+    if args.cdfplot and alt_distn_filename != "":
         if ensemble in null_distns:
             methods=np.array(methods)
             methods=np.insert(methods,2,ensemble)
