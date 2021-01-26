@@ -653,7 +653,11 @@ def get_null_distns_from_file(filename,methods=[standardised_product]):
             try:
                 mcsp_stores=np.load(mcsp_filename)
             except:
-                mcsp_stores=np.load(get_file_from_web(null_distributions_url,mcsp_filename))
+                import requests
+                import io
+                response=requests.get(null_distributions_url+mcsp_filename)
+                response.raise_for_status()
+                mcsp_stores=np.load(io.BytesIO(response.content))#np.load(get_file_from_web(null_distributions_url,mcsp_filename))
             mcsp_min_ranks=create_mcsp_ranks()
             scores[monte_carlo_standardised_product]=mcsp_min_ranks[:]
             building_null=False
