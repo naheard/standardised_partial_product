@@ -650,7 +650,10 @@ def get_null_distns_from_file(filename,methods=[standardised_product]):
     if monte_carlo_standardised_product in methods:
         try:
             mcsp_filename="mcsp_"+str(n)+"_.npy"
-            mcsp_stores=np.load(mcsp_filename)
+            try:
+                mcsp_stores=np.load(mcsp_filename)
+            except:
+                mcsp_stores=np.load(get_file_from_web(null_distributions_url,mcsp_filename))
             mcsp_min_ranks=create_mcsp_ranks()
             scores[monte_carlo_standardised_product]=mcsp_min_ranks[:]
             building_null=False
@@ -711,15 +714,16 @@ def get_file(filename):
     try:
         return(open(filename, "r"))
     except:
-        try:
-            import urllib.request
-            if filename.startswith("null_distns_"):
-                filename=filename.split("_",2)[-1]
-            url_file=urllib.request.urlopen(null_distributions_url+filename)
-            return(url_file)
-        except:
-#            sys.stderr.write("Null distribution file " + filename + " not found.\n")
-            return(None)
+        if filename.startswith("null_distns_"):
+            filename=filename.split("_",2)[-1]
+        return(get_file_from_web(null_distributions_url,filename))
+
+def get_file_from_web(url,filename):
+    try:
+        import urllib.request
+        return(urllib.request.urlopen(url+filename))
+    except:
+        return(None)
 
 def get_k_epsilon_mu(n,beta,dr):
     epsilon=n**(-beta)
@@ -991,6 +995,7 @@ def get_command_line_arguments():
     parser.add_argument("-af","--alt_filename",type=str,dest="alt_filename", metavar="STR",default=None)
     parser.add_argument("-m","--methods",type=str,nargs='+',dest="methods",metavar="STR",default=None)
     parser.add_argument("-g","--grid",type=int,dest="grid", metavar="INT",default=0)
+    parser.add_argument('--mc', dest='mc', action='store_true',default=False)
     parser.add_argument('--tty', dest='checkstdin', action='store_false',default=True)
     parser.add_argument('--noplot', dest='cdfplot', action='store_false',default=True)
     parser.add_argument('--noones', dest='append_zeros_and_ones', action='store_false',default=True)
@@ -1004,7 +1009,7 @@ doubly_monte_carlo_methods=[monte_carlo_standardised_product]
 alternative_distns=['normal','exp','power','comp_power','pw_uniform','point_mass','linear','F']
 
 args=get_command_line_arguments()
-seed,n,M0,M1,alternative_distn,beta,dr,alpha_0,null_filename,checkstdin,alt_distn_filename,methods,grid=args.seed,args.n,args.n0,args.n1,args.alternative_distn,args.beta,args.dr,args.alpha_0,args.null_filename,args.checkstdin,args.alt_filename,args.methods,args.grid
+seed,n,M0,M1,alternative_distn,beta,dr,alpha_0,null_filename,checkstdin,alt_distn_filename,methods,grid,inc_mc=args.seed,args.n,args.n0,args.n1,args.alternative_distn,args.beta,args.dr,args.alpha_0,args.null_filename,args.checkstdin,args.alt_filename,args.methods,args.grid,args.mc
 
 try:
     import rpy2.robjects as robjects
@@ -1031,7 +1036,7 @@ if methods is not None:
     methods=[globals()[m] for m in methods]
 else:
     methods=monte_carlo_methods+closed_form_methods#,standardised_product_subset,asymptotic_standardised_product
-    if n<=10000:
+    if n<=10000 and inc_mc:
         methods+=doubly_monte_carlo_methods
 #methods=[partial_sum]
 #methods=[monte_carlo_standardised_product]
