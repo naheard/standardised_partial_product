@@ -1045,12 +1045,6 @@ else:
 #methods=[partial_sum]
 #methods=[monte_carlo_standardised_product]
 
-auc_filename="auc_"+str(n)+".txt"
-alt_index_pmf_filename="alt_distns_index_pmfs_"+str(n)+".txt"
-if alt_distn_filename is None:
-    alt_distn_filename="h1_cdfs_"+alternative_distn+"_"+str(n)+".txt"    #""+"out_with_ensemble.txt"
-make_a_plot=M1==0 and grid>0
-
 #alpha_0=1
 if checkstdin and not sys.stdin.isatty():
     try:
@@ -1095,6 +1089,12 @@ if alternative_distn=='comp_power':
 k,epsilon,mu=get_k_epsilon_mu(n,beta,dr)
 true_k=k
 random_k=not True
+
+auc_filename="auc_"+str(n)+"_"+str(beta)+".txt"
+alt_index_pmf_filename="alt_distns_index_pmfs_"+str(n)+"_"+str(beta)+".txt"
+if alt_distn_filename is None:
+    alt_distn_filename="h1_cdfs_"+alternative_distn+"_"+str(n)+"_"+str(beta)+".txt"    #""+"out_with_ensemble.txt"
+make_a_plot=M1==0 and grid>0
 
 make_parameter_vectors(n,nmax,methods)
 #print(mu_comp_prod,sigma_comp_prod**2)
