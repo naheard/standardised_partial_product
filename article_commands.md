@@ -12,6 +12,8 @@ Figure 6: To obtain the results in the top left panel, for example, run the comm
 ./compare_combiners.py -n 10000 -n0 0 -n1 10000 -b 0.6
 ```
 
+[Note that these figures also includes results from the Monte Carlo approach; this can be achieved by appending the argument ` --mc` to either command, but this is computationally demanding and will take *much* longer to run.]
+
 Figure 8: To obtain the results in the top right panel, for example, with the five methods used, run the command
 
 ```bash
