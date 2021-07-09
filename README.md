@@ -2,7 +2,7 @@
 Python code for the standardised partial product and other methods for combining *p*-values
 
 ## Partial product, complementary product and sum methods
-There are individul files `PP.py`, `PCP.py` and `PS.py` to run the corresponding methods PP, PCP and PS from the command line.
+There are individul files [PP.py](PP.py), [PCP.py](PCP.py) and [PS.py](PS.py) to run the corresponding methods PP, PCP and PS from the command line.
 
 Example usage: To combine five example p-values (comma or space separated),
 ```bash
