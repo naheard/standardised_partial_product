@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import sys
+import sys, re
 import numpy as np
 from scipy.special import polygamma
 
@@ -44,6 +44,6 @@ def look_up_distribution(z,n,method_name,nrows=10000):
 
 p_values = [0.1,.15,.2]
 if not sys.stdin.isatty(): # Obtain p-values from command line
-    p_values = list(map(float,sys.stdin.readline().split()))
+    p_values = list(map(float,re.split(', | |,',sys.stdin.readline().strip())))
 
 print(PP(p_values,50000,min_alpha=0 if len(sys.argv)<2 else float(sys.argv[1])))

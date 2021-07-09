@@ -4,11 +4,11 @@ Python code for the standardised partial product and other methods for combining
 ## Partial product, complementary product and sum methods
 There are individul files `PP.py`, `PCP.py` and `PS.py` to run the corresponding methods PP, PCP and PS from the command line.
 
-Example usage:
+Example usage: To combine five example p-values (comma or space separated),
 ```bash
-echo 0.03 0.1 0.15 0.5 0.6 | ./PP.py
-echo 0.03 0.1 0.15 0.5 0.6 | ./PCP.py
-echo 0.03 0.1 0.15 0.5 0.6 | ./PS.py
+echo 0.01 0.05 0.2 0.4 0.8 | ./PP.py
+echo 0.03,0.05,0.2,0.4,0.8 | ./PCP.py
+echo 0.03, 0.05, 0.2, 0.4, 0.8 | ./PS.py
 ```
 
 ## Comparing methods
